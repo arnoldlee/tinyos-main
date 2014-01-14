@@ -95,7 +95,7 @@ def computeFits(dbName):
     #            (this is the distance metric that jay spent so much
     #            time thinking about)
 
-def approxFits(dbName):
+def approxFits(dbName, progCallback=None):
     c = sqlite3.connect(dbName)
 
     q0 = '''SELECT x.node_id as node_id, min(x.reboot_counter) as reboot_counter
@@ -147,6 +147,8 @@ def approxFits(dbName):
     needFits = c.execute(q0).fetchall()
     while needFits:
         for (node_id, reboot_counter) in needFits:
+            if progCallback:
+                progCallback("Fitting node %x rc %u (%u nodes left)\n"%(node_id, reboot_counter, len(needFits)))
             lastFit = c.execute(q1, (node_id, reboot_counter)).fetchone()
             if lastFit and not lastFit[0] is None:
                 (node1, rc1, fakeAlpha, lastBeta) = lastFit
@@ -168,10 +170,16 @@ def rebuildTables(dbName):
     c.commit()
     c.close()
 
-def phoenix(dbName):
+def phoenix(dbName, progCallback=None):
+    if progCallback:
+        progCallback("Rebuilding timestamp tables\n")
     rebuildTables(dbName)
+    if progCallback:
+        progCallback("Computing fits\n")
     computeFits(dbName)
-    approxFits(dbName)
+    if progCallback:
+        progCallback("Computing approximate fits\n")
+    approxFits(dbName, progCallback)
 
 if __name__ == '__main__':
     dbName = sys.argv[1]

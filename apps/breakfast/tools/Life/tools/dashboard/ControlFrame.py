@@ -197,7 +197,13 @@ class ControlFrame(Frame):
         self.routerDownloadFrame.grid(column=3, row=0)
         #TODO: would be cool to disable this if no routers have been
         # detected
-
+        
+        self.generateCSVFrame = Frame(self, padx=self.SPACING)
+        self.generateCSVButton = Button(self.generateCSVFrame,
+          text="Generate CSV Files",
+          command=self.generateCSV)
+        self.generateCSVButton.grid(column=0, row=0)
+        self.generateCSVFrame.grid(column=4, row=0)
 #         self.selectionFrame = Frame(self, padx=self.SPACING)
 #         self.selectionFrame.grid(column=0, row=0)
 #         #
@@ -560,16 +566,24 @@ class ControlFrame(Frame):
         self.progressMessage(message)
         (masterId, contacted, found) = self.db.getLastDownloadResults(masterId)
         self.progressMessage("Download finished: %u/%u identified nodes contacted\n"%(contacted, found))
-        self.csvRunner()
+#        self.csvRunner()
 #         self.csvThread = Thread(target=self.csvRunner,
 #           name="csvThread")
 #         self.csvThread.daemon = True
 #         self.csvThread.start()
+    
+    def generateCSV(self):
+        self.csvThread = Thread(target=self.csvRunner,
+          name="csvThread")
+        self.csvThread.daemon = True
+        self.csvThread.start()
 
+        
 
     def csvRunner(self):
-        self.progressMessage("Processing data to CSV files, please wait.\n")
-        DumpCSV.dumpCSV(self.dbFile, self.DEFAULT_DATA_DIR)
+        self.progressMessage("Processing data to CSV files. This may take many minutes.\n")
+        DumpCSV.dumpCSV(self.dbFile, self.DEFAULT_DATA_DIR,
+          self.progressMessage)
         self.progressMessage("CSV files ready (under '%s' directory)\n"%
           self.DEFAULT_DATA_DIR )
         for (nodeId, barcodeId, lastSampleTime, lastContact, batteryVoltage) in self.db.contactSummary():

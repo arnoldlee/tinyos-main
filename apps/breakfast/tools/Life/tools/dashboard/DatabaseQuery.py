@@ -183,13 +183,18 @@ class DatabaseQuery(object):
         """
         Get the missing cookie values for each node.
         """
-        
-        SORT_COOKIE_SQL = '''CREATE TEMPORARY TABLE sorted_flash 
-                            AS SELECT a.node_id, a.cookie, a.nextCookie, a.retry, b.barcode_id
-                            FROM cookie_table a, node_status b
-                            WHERE a.node_id = b.node_id
-                            ORDER BY a.node_id, a.cookie;'''
-                            
+
+        SORT_COOKIE_SQL = '''CREATE TEMPORARY TABLE sorted_flash AS 
+             SELECT cookie_table.node_id as node_id, 
+               cookie, nextCookie, retry, barcode_id
+             FROM cookie_table 
+             JOIN last_status 
+               ON cookie_table.node_id = last_status.node_id
+             JOIN node_status 
+               ON node_status.node_id = last_status.node_id 
+                  AND node_status.ts = last_status.ts
+             ORDER BY cookie_table.node_id, cookie'''
+
         MISSING_ORDER_SIZE_SQL = '''SELECT l.barcode_id, 
               l.cookie,
               (r.cookie - l.nextCookie -1) as missing

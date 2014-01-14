@@ -185,10 +185,12 @@ queries=[
        ON fits.node1 = current_sensors.node_id
           AND fits.rc1 = current_sensors.rc''']
 
-def deNormalize(dbName):
+def deNormalize(dbName, progCallback=None):
     c = sqlite3.connect(dbName)
     try:
-        for q in queries:
+        for (i,q) in enumerate(queries):
+            if progCallback:
+                progCallback("Formatting data step %u/%u\n"%(i, len(queries)))
             c.execute(q)
     except:
         e = sys.exc_info()[0]
@@ -196,7 +198,7 @@ def deNormalize(dbName):
     else:
         c.commit()
 
-def dump(dbName, baseDir, sep=','):
+def dump(dbName, baseDir, progCallback=None, sep=','):
     #baseDir/internal.csv
     if not os.path.isdir(baseDir):
         os.mkdir(baseDir)
@@ -207,6 +209,8 @@ def dump(dbName, baseDir, sep=','):
     sensorCols = ["bacon_id", "toast_id", "unixTS", "isoTS", "date",
       "time", "channel", "sensorType", "sensorId", "tsQuality"]
     c = sqlite3.connect(dbName)
+    if progCallback:
+        progCallback("Dumping internal sensors\n")
     with open(os.path.join(baseDir, 'internal.csv'), 'w') as f:
         with c:
             q= ''' SELECT barcode_id, ts, 
@@ -224,6 +228,8 @@ def dump(dbName, baseDir, sep=','):
     #baseDir/<sensorType>.csv
     with c:
         for (st,) in c.execute('''SELECT distinct sensor_type from sensor_sample_final''').fetchall():
+            if progCallback:
+                progCallback("Dumping sensor data for type %u\n"%st)
             with open(os.path.join(baseDir, 'sensorType_'+str(st)+'.csv'), 'w') as f:
                 f.write(sep.join(externalCols)+'\n')
                 q= '''SELECT sensor_type, bacon_id, toast_id,
@@ -241,6 +247,8 @@ def dump(dbName, baseDir, sep=','):
                     "%.2f"%unixTS, isoTS, date, time, "%.4f"%voltage,
                     "%.4f"%tsq])+'\n')
 
+    if progCallback:
+        progCallback("Dumping sensor listing\n")
     with c:
         q = '''SELECT bacon_barcode, toast_barcode, 
                 ts as unixTS,
@@ -260,14 +268,14 @@ def dump(dbName, baseDir, sep=','):
 
 
 
-def dumpCSV(dbName, baseDir='data'):
+def dumpCSV(dbName, baseDir='data', progCallback=None):
     print "Dumping from %s to %s"%(dbName, baseDir)
     print "Generating timestamp information"
-    Phoenix.phoenix(dbName)
+    Phoenix.phoenix(dbName, progCallback=progCallback)
     print "formatting data"
-    deNormalize(dbName)
+    deNormalize(dbName, progCallback=progCallback)
     print "dumping to .csv files"
-    dump(dbName, baseDir)
+    dump(dbName, baseDir, progCallback=progCallback)
     
 
 if __name__ == '__main__':
