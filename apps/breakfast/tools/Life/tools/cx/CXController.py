@@ -216,6 +216,28 @@ class CXController(object):
                                           msg.get_node_id(),
                                           nodeRetryMap[nextCookie])
                                         break
+
+                                    else if nextCookie in nodeRetryMap and nodeRetryMap[nextCookie] >= constants.MAX_RECOVERY_ATTEMPTS:
+                                        #determine if this gap is big enough so that we should download part of it
+                                        subpart = constants.MAX_RECOVERY_ATTEMPTS / 5
+                                        sublen = min(missing, constants.MAX_REQUEST_UNIT) - subpart*1024
+                                        if(sublen >= 1024):
+                                            msg = CxRecordRequestMsg.CxRecordRequestMsg()
+                                            msg.set_node_id(node_id)
+                                            msg.set_cookie(nextCookie + subpart*1024)
+                                            msg.set_length(min(missing - subpart*1024, constants.MAX_REQUEST_UNIT))
+                                            if repairCallBack:
+                                                repairCallBack(msg.get_node_id(),
+                                                  msg.get_length(), totalMissing-subpart*1024)
+                                            d.send(msg, msg.get_node_id())
+                                            nodeRetryMap[nextCookie] = nodeRetryMap.get(nextCookie,0) + 1
+                                            print "REC %u requesting %u at %u from %u (attempt %u)"%(node, msg.get_length(),
+                                              msg.get_cookie(),
+                                              msg.get_node_id(),
+                                              nodeRetryMap[nextCookie])
+                                            break
+                                        else:
+                                            continue
                                     else:
                                         print "REC %u give up on gap %u"%(node, nextCookie)
                             else:
