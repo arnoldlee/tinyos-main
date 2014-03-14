@@ -37,6 +37,7 @@
 
 typedef nx_struct cx_download {
   nx_uint8_t networkSegment;
+  nx_uint32_t unixTS;
   nx_uint8_t padding[8];
 } cx_download_t;
 

@@ -168,7 +168,9 @@ class CXMoteIF(MoteIF):
             source = self.source
         downloadMsg = CxDownload.CxDownload()
         downloadMsg.set_networkSegment(networkSegment)
-        t0 = time.time() 
+        t0 = time.time()
+        downloadMsg.set_unixTS(t0)
+
         error = self.sendMsg(source, bsId, 
           downloadMsg.get_amType(), 0, downloadMsg)
         #return the unix time that the download command was sent
