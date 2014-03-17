@@ -216,8 +216,7 @@ class CXController(object):
                                           msg.get_node_id(),
                                           nodeRetryMap[nextCookie])
                                         break
-
-                                    else if nextCookie in nodeRetryMap and nodeRetryMap[nextCookie] >= constants.MAX_RECOVERY_ATTEMPTS:
+                                    elif nextCookie in nodeRetryMap and nodeRetryMap[nextCookie] >= constants.MAX_RECOVERY_ATTEMPTS:
                                         #determine if this gap is big enough so that we should download part of it
                                         subpart = constants.MAX_RECOVERY_ATTEMPTS / 5
                                         sublen = min(missing, constants.MAX_REQUEST_UNIT) - subpart*1024
