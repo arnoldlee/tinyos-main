@@ -182,19 +182,26 @@ class ControlFrame(Frame):
         self.commitButton.grid(column=0, row=0)
         self.commitFrame.grid(column=1, row=0)
 
+        self.TimesyncFrame = Frame(self, padx=self.SPACING)
+        self.TimesyncButton = Button(self.TimesyncFrame, 
+          text="TimeSync", 
+          command=self.TimeSync)
+        self.TimesyncButton.grid(column=0, row=0)
+        self.TimesyncFrame.grid(column=2, row=0)
+
         self.discoverFrame = Frame(self, padx=self.SPACING)
         self.discoverButton = Button(self.discoverFrame,
           text="Discover Network",
           command=self.discoverNetwork)
         self.discoverButton.grid(column=0, row=0)
-        self.discoverFrame.grid(column=2, row=0)
+        self.discoverFrame.grid(column=3, row=0)
 
         self.routerDownloadFrame = Frame(self, padx=self.SPACING)
         self.routerDownloadButton = Button(self.routerDownloadFrame,
           text="Router Download",
           command = self.routerDownload)
         self.routerDownloadButton.grid(column=0, row=0)
-        self.routerDownloadFrame.grid(column=3, row=0)
+        self.routerDownloadFrame.grid(column=4, row=0)
         #TODO: would be cool to disable this if no routers have been
         # detected
         
@@ -203,7 +210,7 @@ class ControlFrame(Frame):
           text="Generate CSV Files",
           command=self.generateCSV)
         self.generateCSVButton.grid(column=0, row=0)
-        self.generateCSVFrame.grid(column=4, row=0)
+        self.generateCSVFrame.grid(column=5, row=0)
 #         self.selectionFrame = Frame(self, padx=self.SPACING)
 #         self.selectionFrame.grid(column=0, row=0)
 #         #
@@ -324,6 +331,45 @@ class ControlFrame(Frame):
         # detect attached nodes
         #
         self.deviceDetection()
+
+    def TimeSyncRunner(self):
+        changeMessages = {}
+        timestamp = time.time()
+        for barcode in self.hub.node.settings:
+            (nodeId, oInterval, oChannel, oRole) = self.hub.node.originalSettings[barcode]
+            (nodeId, mInterval, mChannel, mRole) = self.hub.node.settings[barcode]
+            changeMessages[nodeId] = changeMessages.get(nodeId, [-100])+[timestamp]
+            if mRole == constants.ROLE_LEAF:
+                print "We have such nodes: %s (%u)"%(barcode, nodeId)
+                print "Messages: %s" %(changeMessages)
+        return
+        cxCtrl = CXController.CXController(self.dbFile)
+
+        configMap= { 'maxDownloadRounds':1000}
+        cxCtrl.download('serial@%s:115200'%(self.comDict[self.comVar.get()]),
+          constants.NS_GLOBAL, configMap, 
+          refCallBack=self.refCallBack,
+          eosCallBack=self.eosCallBack,
+          repairCallBack=self.repairCallBack,
+          finishedCallBack=self.downloadFinished,
+          requestMissing=False,
+          outboundMessages = changeMessages,
+          outboundCallback = self.outboundCallback)
+        self.progressMessage("""Timestamp information sent to network.\n""")
+
+    def TimeSync(self):
+        self.progressMessage("Time synchronizing in progress, please wait.\n")
+        self.discoverButton.config(bg="yellow", text="BUSY",
+          state=DISABLED)
+        self.routerDownloadButton.config(bg="yellow", text="BUSY",
+          state=DISABLED)
+        self.commitButton.config(bg="green", text="BUSY",
+          state=DISABLED)
+        self.downloadThread = Thread(target=self.TimeSyncRunner,
+          name="TimeSyncThread")
+        self.downloadThread.daemon = True
+        self.downloadThread.start()
+        self.downloadProgress()
 
     def earliestSpinboxConsistency(self, event=None):
         earliest = int(self.earliestSpinbox.get())

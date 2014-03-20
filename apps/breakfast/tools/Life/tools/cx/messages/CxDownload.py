@@ -7,14 +7,14 @@
 import tinyos.message.Message
 
 # The default size of this message type in bytes.
-DEFAULT_MESSAGE_SIZE = 9
+DEFAULT_MESSAGE_SIZE = 13
 
 # The Active Message type associated with this message.
 AM_TYPE = 208
 
 class CxDownload(tinyos.message.Message.Message):
-    # Create a new CxDownload of size 9.
-    def __init__(self, data="", addr=None, gid=None, base_offset=0, data_length=9):
+    # Create a new CxDownload of size 13.
+    def __init__(self, data="", addr=None, gid=None, base_offset=0, data_length=13):
         tinyos.message.Message.Message.__init__(self, data, addr, gid, base_offset, data_length)
         self.amTypeSet(AM_TYPE)
     
@@ -32,6 +32,10 @@ class CxDownload(tinyos.message.Message.Message):
         s = "Message <CxDownload> \n"
         try:
             s += "  [networkSegment=0x%x]\n" % (self.get_networkSegment())
+        except:
+            pass
+        try:
+            s += "  [unixTS=0x%x]\n" % (self.get_unixTS())
         except:
             pass
         try:
@@ -101,9 +105,64 @@ class CxDownload(tinyos.message.Message.Message):
         return 8
     
     #
+    # Accessor methods for field: unixTS
+    #   Field type: long
+    #   Offset (bits): 8
+    #   Size (bits): 32
+    #
+
+    #
+    # Return whether the field 'unixTS' is signed (False).
+    #
+    def isSigned_unixTS(self):
+        return False
+    
+    #
+    # Return whether the field 'unixTS' is an array (False).
+    #
+    def isArray_unixTS(self):
+        return False
+    
+    #
+    # Return the offset (in bytes) of the field 'unixTS'
+    #
+    def offset_unixTS(self):
+        return (8 / 8)
+    
+    #
+    # Return the offset (in bits) of the field 'unixTS'
+    #
+    def offsetBits_unixTS(self):
+        return 8
+    
+    #
+    # Return the value (as a long) of the field 'unixTS'
+    #
+    def get_unixTS(self):
+        return self.getUIntElement(self.offsetBits_unixTS(), 32, 1)
+    
+    #
+    # Set the value of the field 'unixTS'
+    #
+    def set_unixTS(self, value):
+        self.setUIntElement(self.offsetBits_unixTS(), 32, value, 1)
+    
+    #
+    # Return the size, in bytes, of the field 'unixTS'
+    #
+    def size_unixTS(self):
+        return (32 / 8)
+    
+    #
+    # Return the size, in bits, of the field 'unixTS'
+    #
+    def sizeBits_unixTS(self):
+        return 32
+    
+    #
     # Accessor methods for field: padding
     #   Field type: short[]
-    #   Offset (bits): 8
+    #   Offset (bits): 40
     #   Size of each element (bits): 8
     #
 
@@ -123,7 +182,7 @@ class CxDownload(tinyos.message.Message.Message):
     # Return the offset (in bytes) of the field 'padding'
     #
     def offset_padding(self, index1):
-        offset = 8
+        offset = 40
         if index1 < 0 or index1 >= 8:
             raise IndexError
         offset += 0 + index1 * 8
@@ -133,7 +192,7 @@ class CxDownload(tinyos.message.Message.Message):
     # Return the offset (in bits) of the field 'padding'
     #
     def offsetBits_padding(self, index1):
-        offset = 8
+        offset = 40
         if index1 < 0 or index1 >= 8:
             raise IndexError
         offset += 0 + index1 * 8
