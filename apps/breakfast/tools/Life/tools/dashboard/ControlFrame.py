@@ -342,7 +342,7 @@ class ControlFrame(Frame):
             if mRole == constants.ROLE_LEAF:
                 print "We have such nodes: %s (%u)"%(barcode, nodeId)
                 print "Messages: %s" %(changeMessages)
-        return
+        #return
         cxCtrl = CXController.CXController(self.dbFile)
 
         configMap= { 'maxDownloadRounds':1000}
