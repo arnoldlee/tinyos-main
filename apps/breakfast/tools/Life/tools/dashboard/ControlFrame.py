@@ -43,6 +43,7 @@ from tools.serial.tools.list_ports import comports
 
 from tools.cx.messages import SetBaconSampleInterval
 from tools.cx.messages import SetToastSampleInterval
+from tools.cx.messages import SetTimeSync
 from tools.cx.messages import SetProbeSchedule
 
 import time
@@ -334,11 +335,12 @@ class ControlFrame(Frame):
 
     def TimeSyncRunner(self):
         changeMessages = {}
-        timestamp = time.time()
+        timestamp = int(time.time())
+        setTimeSync = SetTimeSync.SetTimeSync(timestamp)
         for barcode in self.hub.node.settings:
             (nodeId, oInterval, oChannel, oRole) = self.hub.node.originalSettings[barcode]
             (nodeId, mInterval, mChannel, mRole) = self.hub.node.settings[barcode]
-            changeMessages[nodeId] = changeMessages.get(nodeId, [-100])+[timestamp]
+            changeMessages[nodeId] = changeMessages.get(nodeId, [])+[setTimeSync]
             if mRole == constants.ROLE_LEAF:
                 print "We have such nodes: %s (%u)"%(barcode, nodeId)
                 print "Messages: %s" %(changeMessages)
