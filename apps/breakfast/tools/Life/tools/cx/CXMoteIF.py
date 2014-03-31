@@ -189,6 +189,7 @@ class CXMoteIF(MoteIF):
                 if not self.finishedListener.finished:
                     print "TXQ SW TX %u %u %x"%(addr, self.fwdStatusListener.spaceFree, self.finishedListener.finished)
                     with self.fwdStatusListener.cv:
+                        print "source: %s, addr: %s, type: %s, msg: %s"%(source, addr, msg.get_amType(), msg)
                         self.sendMsg(source, addr, msg.get_amType(), 0, msg)
                         self.fwdStatusListener.spaceFree -= 1
                 else:

@@ -52,5 +52,4 @@ configuration SettingsStorageC{
   components LocalTimeMilliC;
   SettingsStorageP.RebootCounter -> RebootCounterC;
   SettingsStorageP.LocalTime -> LocalTimeMilliC;
-
 } 

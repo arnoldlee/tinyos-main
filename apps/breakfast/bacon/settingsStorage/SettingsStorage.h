@@ -34,6 +34,7 @@
 #define SETTINGS_STORAGE_H
 
 #define MAX_SETTING_LEN 28
+#define SS_KEY_TIME_SYNC 0x21
 
 //hack for mig: mig doesn't appear to be picking up typedefs
 //correctly? have to re-write the entire typedef each time
@@ -87,5 +88,11 @@ typedef struct settings_record {
   uint8_t offset;
   uint8_t data[SETTINGS_CHUNK_SIZE];
 } __attribute__((packed)) settings_record_t;
+
+typedef struct settings_record_timesync {
+  uint8_t recordType;
+  uint16_t rebootCounter;
+  uint32_t ts;
+} __attribute__((packed)) settings_record_ts_t;
 
 #endif

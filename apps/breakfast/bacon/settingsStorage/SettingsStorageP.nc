@@ -32,6 +32,8 @@
 
 
  #include "SettingsStorage.h"
+ #include "../BaconSampler/BaconSampler.h"
+
 module SettingsStorageP {
   provides interface SettingsStorage;
 
@@ -41,6 +43,8 @@ module SettingsStorageP {
   uses interface LogWrite;
   uses interface Get<uint16_t> as RebootCounter;
   uses interface LocalTime<TMilli>;
+
+  uses interface Leds;
 } implementation {
 
   //TODO: un-hardcode this. Should be based on some platform
@@ -48,6 +52,11 @@ module SettingsStorageP {
   uint8_t tlvs[128];
   bool loaded = FALSE;
 
+  #if ENABLE_TIME_SYNC == 1
+  //Used to indicate if the request is to send timesync info or change some 
+  //settings.
+  bool is_Timesync = FALSE;
+  #endif
 
   command error_t SettingsStorage.get(uint8_t key, void* val, uint8_t len){
     tlv_entry_t* entry;
@@ -74,6 +83,19 @@ module SettingsStorageP {
   }
  
   settings_record_t rec = {.recordType=RECORD_TYPE_SETTINGS};
+
+  #if ENABLE_TIME_SYNC == 1
+  //time_sync information is recorded as Bacon_sample record.
+  bacon_sample_t time_sync_rec = {
+    .recordType = RECORD_TYPE_BACON_SAMPLE,
+    .rebootCounter = 0xffff,
+    .baseTime = 0,
+    .battery = 0xffff,
+    .light = 0xffff,
+    .thermistor = 0xffff
+  };
+  #endif
+
   bool logging;
   enum {
     S_IDLE=0x00,
@@ -122,6 +144,12 @@ module SettingsStorageP {
 
   event void LogWrite.appendDone(void* buf, storage_len_t len, 
       bool recordsLost, error_t error){
+
+  #if ENABLE_TIME_SYNC == 1
+    if(is_Timesync)
+      return;
+  #endif
+
     if (error == SUCCESS){
       if (logState == S_LOG_FIRST){
         post logSettings2();
@@ -144,6 +172,19 @@ module SettingsStorageP {
   command error_t SettingsStorage.set(uint8_t key, void* val, uint8_t len){
     tlv_entry_t* entry;
     error_t ret = SUCCESS;
+
+    #if ENABLE_TIME_SYNC == 1
+    if(key == SS_KEY_TIME_SYNC)
+    {
+      is_Timesync = TRUE;
+      memcpy(&time_sync_rec.baseTime, val, len);
+      ret = call LogWrite.append(&time_sync_rec, sizeof(time_sync_rec));
+      return ret;
+    }
+    else
+      is_Timesync = FALSE;
+    #endif
+
     if (!loaded){
       ret = call TLVStorage.loadTLVStorage(tlvs);
       loaded = TRUE;
